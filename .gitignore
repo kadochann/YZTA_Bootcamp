@@ -1,0 +1,15 @@
+# Python & Sanal Ortam
+venv/
+__pycache__/
+*.pyc
+
+# IDE Dosyaları
+.idea/
+.vscode/
+
+# Veri ve Modeller (GitHub'a atılmamalı, herkes lokalinde üretmeli/koymalı)
+data/
+models/*.pkl
+
+# Çevresel Değişkenler (API Key vb.)
+.env
