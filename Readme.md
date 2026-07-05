@@ -27,19 +27,40 @@ SmartTriage_Grup131/
 │   ├── ml/                 # Model yükleme ve tahmin (predict) fonksiyonları
 │   ├── llm/                # Gemini API entegrasyonu ve prompt mühendisliği katmanı
 │   └── ui/                 # Streamlit arayüz kodları (app.py)
+├── assets/                 # README dökümantasyonunda kullanılan ekran görüntüleri
 ├── .env                    # API Anahtarları ve gizli değişkenler (Git'e pushlanmaz!)
 ├── .gitignore              # Proje dışı tutulacak dosya filtreleri
 ├── requirements.txt        # Proje bağımlılıkları ve Python paketleri
 └── README.md               # Proje ana dökümantasyonu
 ```
 
+## Uygulama Arayüzü ve Ekran Görüntüleri
+### 1. Karşılama Ekranı & Genel Bakış
+Sistemin çalışma mantığının, hasta istatistiklerinin ve demo branş dağılım grafiklerinin yer aldığı ana karşılama arayüzü:
+![alt text](assets/app_SS_1.jpeg)
+
+###  2. Hasta Ön-Triyaj Giriş Paneli
+Hastanın yaş, şikayet süresi, şiddeti ve doğal dildeki tıbbi durumunu girdiğinde arkada Gemini API ve ML modelini tetikleyen kullanıcı veri giriş formu:
+![alt text](assets/app_SS_2.jpeg)
+
+###  3. Hekim Karar Destek Paneli (Detaylı Özet ve Filtreleme)
+Hekimlerin randevudan önce hastanın durumunu analiz etmesini sağlayan, risk faktörlerini listeleyen ve Gemini API tarafından üretilen "Yapay Zeka Özeti" modülünü içeren akıllı panel
+![alt text](assets/app_SS_3.jpeg)
+
+Filtreleme mekanizması sayesinde aciliyet seviyesine ve poliklinik branşına göre hasta listesi dinamik olarak daraltılabilmektedir:
+![alt text](assets/app_SS_4.jpeg)
+
+### 4. Genel İstatistikler ve Klinik Analiz Paneli
+Klinik yönetiminin günlük hasta trendini, aciliyet dağılımlarını ve branş bazlı yoğunlukları izleyebileceği veri görselleştirme alanı:
+![alt text](assets/app_SS_5.jpeg)
+
 ## 🔄 Scrum Süreci ve Sprint Yönetimi
 Projemiz, Scrum metodolojisine uygun olarak yönetilmektedir. İş takibi, backlog yönetimi ve sprint tahtası için ClickUp kullanılmıştır.
 
 ## 📅 Sprint 1 (İlk Aşama Teslimi - 5 Temmuz)
-Hedef: Hızlı prototipleme amacıyla Streamlit üzerinde uçtan uca çalışan (End-to-End) MVP'nin ayağa kaldırılması, LLM JSON entegrasyonunun tamamlanması ve temel ML modelinin arayüze bağlanması.
+**Hedef:** Hızlı prototipleme amacıyla Streamlit üzerinde uçtan uca çalışan (End-to-End) MVP'nin ayağa kaldırılması, LLM JSON entegrasyonunun tamamlanması ve temel ML modelinin arayüze bağlanması.
 
-![alt text](<Screenshot 2026-07-03 210223.png>)
+![alt text](assets/Clickup_Board.png)
 
 ## 👥 Ekip ve Görev Dağılımı (Grup 131)
 
