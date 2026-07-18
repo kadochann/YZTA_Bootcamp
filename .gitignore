@@ -1,5 +1,6 @@
 # Python & Sanal Ortam
 venv/
+.venv
 __pycache__/
 *.pyc
 
