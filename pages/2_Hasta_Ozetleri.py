@@ -1,5 +1,5 @@
 """
-pages/2_👨‍⚕️_Hekim_Paneli.py  ─  Hekim Karar Destek Paneli
+pages/2_Hasta_Ozetleri.py  ─  Hasta Özetleri Paneli
 """
 
 import streamlit as st
@@ -11,60 +11,57 @@ from src.utils.styles import MAIN_CSS
 from src.utils.mock_data import get_mock_hastalar, aciliyet_seviyesi, aciliyet_kart_class, BRANSLAR
 
 st.set_page_config(
-    page_title="Hekim Paneli | MediTriaj",
-    page_icon="👨‍⚕️",
+    page_title="Hasta Özetleri | MediTriaj",
+    page_icon="🩺",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 st.markdown(MAIN_CSS, unsafe_allow_html=True)
 
-# ── Sidebar ──────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown(
-        """
-        <div style='text-align:center; padding: 12px 0 24px 0;'>
-            <div style='font-size:2.8rem;'>🩺</div>
-            <div style='font-size:1.15rem; font-weight:700;'>MediTriaj</div>
-            <div style='font-size:0.78rem; opacity:0.65; margin-top:2px;'>YZTA Bootcamp 2026 · Grup 131</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("---")
+# ── Top Navbar ──────────────────────────────────────────────────────────────
+with st.container(key="navbar"):
+    col_title, col_nav = st.columns([3, 2], vertical_alignment="center")
 
-    st.markdown('<div style="font-size:0.85rem; font-weight:600; opacity:0.8; margin-bottom:8px;">🔍 Filtrele</div>', unsafe_allow_html=True)
-    filtre_aciliyet = st.multiselect(
-        "Aciliyet Seviyesi",
-        ["🔴 Yüksek (8-10)", "🟡 Orta (5-7)", "🟢 Düşük (1-4)"],
-        default=["🔴 Yüksek (8-10)", "🟡 Orta (5-7)", "🟢 Düşük (1-4)"],
-    )
-    filtre_brans = st.multiselect(
-        "Branş",
-        list(BRANSLAR.keys()),
-        default=list(BRANSLAR.keys()),
-    )
-    st.markdown("---")
-    st.markdown(
-        """
-        <div style='font-size:0.78rem; opacity:0.6; line-height:1.6; padding: 0 4px;'>
-        <b>ℹ️ Not:</b><br>
-        Bu panel demo verilerle çalışmaktadır. Gerçek entegrasyon için ML modeli ve
-        veritabanı bağlantısı gereklidir.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    with col_title:
+        st.markdown(
+            """
+            <div style="display:flex; align-items:center; gap:12px; padding: 5px 0;">
+                <div>
+                    <div style="font-size:2.7rem; font-weight:800; color:#ffffff; line-height:1.1; letter-spacing:-0.5px;">MediTriaj</div>
+                    <div style="font-size:1.15rem; color:#B8C8E0; font-weight:600; margin-top:4px;">Akıllı Ön-Triyaj ve Doktor Karar Destek Paneli</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_nav:
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            st.page_link("Ana_Sayfa.py", label="🏠 Ana Sayfa", use_container_width=True)
+        with c2:
+            st.page_link("pages/2_Hasta_Ozetleri.py", label="📋 Hasta Özetleri", use_container_width=True)
+
+st.markdown("<hr style='margin-top: 5px; margin-bottom: 20px; border-color: #E2E8F0;'>", unsafe_allow_html=True)
 
 # ── Başlık ────────────────────────────────────────────────────────────────────
 st.markdown(
     """
     <div style="margin-bottom:24px;">
-        <span style="font-size:1.8rem; font-weight:700; color:#0F2544;">👨‍⚕️ Hekim Karar Destek Paneli</span><br>
-        <span style="color:#64748B; font-size:0.95rem;">Bugünkü randevu listesi · Yapay Zeka Destekli Özet Raporlar</span>
+        <span style="font-size:1.8rem; font-weight:700; color:#0F2544;">Hasta Özetleri</span><br>
+        <span style="color:#64748B; font-size:0.95rem;">Bugünkü randevu listesi ve yapay zeka destekli ön-triyaj özet raporları</span>
     </div>
     """,
     unsafe_allow_html=True,
 )
+
+# ── Filtreler ─────────────────────────────────────────────────────────────────
+with st.expander("Hasta Listesini Filtrele", expanded=False):
+    filtre_aciliyet = st.multiselect(
+        "Aciliyet Seviyesi",
+        ["🔴 Yüksek (8-10)", "🟡 Orta (5-7)", "🟢 Düşük (1-4)"],
+        default=["🔴 Yüksek (8-10)", "🟡 Orta (5-7)", "🟢 Düşük (1-4)"],
+    )
 
 # ── Özet metrikler ────────────────────────────────────────────────────────────
 hastalar = get_mock_hastalar()
@@ -74,10 +71,10 @@ orta   = sum(1 for h in hastalar if 5 <= h["aciliyet_skoru"] < 8)
 dusuk  = sum(1 for h in hastalar if h["aciliyet_skoru"] < 5)
 
 m1, m2, m3, m4 = st.columns(4)
-m1.metric("📋 Toplam Randevu", len(hastalar))
-m2.metric("🔴 Yüksek Aciliyet", acil,  delta=f"Öncelikli")
-m3.metric("🟡 Orta Aciliyet",   orta)
-m4.metric("🟢 Düşük Aciliyet",  dusuk)
+m1.metric("Toplam Randevu", len(hastalar))
+m2.metric("Yüksek Aciliyet", acil, delta="Öncelikli")
+m3.metric("Orta Aciliyet",   orta)
+m4.metric("Düşük Aciliyet",  dusuk)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -90,7 +87,6 @@ def aciliyet_etiketi(skor):
 filtreli = [
     h for h in hastalar
     if aciliyet_etiketi(h["aciliyet_skoru"]) in filtre_aciliyet
-    and h["brans"] in filtre_brans
 ]
 
 # Aciliyete göre sırala
@@ -101,7 +97,7 @@ if not filtreli:
     st.stop()
 
 # ── Sekme: Liste / Detay ──────────────────────────────────────────────────────
-tab_liste, tab_detay = st.tabs(["📋 Randevu Listesi", "🔬 Detaylı İnceleme"])
+tab_liste, tab_detay = st.tabs(["Randevu Listesi", "Detaylı İnceleme"])
 
 # ───────────────────────────── SEKME 1: LİSTE ────────────────────────────────
 with tab_liste:
@@ -110,7 +106,6 @@ with tab_liste:
         skor   = hasta["aciliyet_skoru"]
         bar_oran = int(skor / 10 * 100)
         brans_renk = BRANSLAR.get(hasta["brans"], {}).get("renk", "#1A3A6B")
-        brans_icon = BRANSLAR.get(hasta["brans"], {}).get("icon", "🏥")
         kart_class = aciliyet_kart_class(skor)
 
         with st.container():
@@ -120,23 +115,23 @@ with tab_liste:
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
                         <div>
                             <div style="font-size:1.05rem; font-weight:700; color:#0F2544; margin-bottom:2px;">
-                                👤 {hasta["ad_soyad"]} &nbsp;
+                                {hasta["ad_soyad"]} &nbsp;
                                 <span style="font-size:0.82rem; font-weight:400; color:#64748B;">
-                                    {hasta["yas"]} yaş · 🕐 {hasta["randevu"]}
+                                    {hasta["yas"]} yaş · {hasta["randevu"]}
                                 </span>
                             </div>
                             <div style="font-size:0.85rem; color:#475569; margin-top:4px; margin-bottom:10px;">
                                 {hasta["sikayet_ozeti"]}
                             </div>
                             <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
-                                {"".join(f'<span style="background:#EFF6FF; color:#1E40AF; border-radius:999px; padding:2px 10px; font-size:0.78rem;">🔹 {s}</span>' for s in hasta["semptomlar"])}
+                                {"".join(f'<span style="background:#EFF6FF; color:#1E40AF; border-radius:999px; padding:2px 10px; font-size:0.78rem;">{s}</span>' for s in hasta["semptomlar"])}
                             </div>
                         </div>
                         <div style="text-align:right; min-width:130px;">
                             <div style="font-size:1.3rem; font-weight:700; color:{brans_renk}; margin-bottom:4px;">
-                                {brans_icon} {hasta["brans"]}
+                                {hasta["brans"]}
                             </div>
-                            <span class="{seviye['badge']}">{seviye['emoji']} {seviye['label']}</span>
+                            <span class="{seviye['badge']}">{seviye['label']}</span>
                         </div>
                     </div>
                     <div style="font-size:0.8rem; color:#64748B; margin-bottom:4px;">
@@ -146,11 +141,11 @@ with tab_liste:
                         <div class="{seviye['bar']}" style="width:{bar_oran}%;"></div>
                     </div>
                     <div style="background:#F8FAFF; border:1px solid #DBEAFE; border-radius:10px; padding:12px 14px; margin-top:10px;">
-                        <div style="font-size:0.78rem; color:#1E3A5F; font-weight:600; margin-bottom:4px;">🤖 Yapay Zeka Özeti</div>
+                        <div style="font-size:0.78rem; color:#1E3A5F; font-weight:600; margin-bottom:4px;">Yapay Zeka Özeti</div>
                         <div style="font-size:0.85rem; color:#334155; line-height:1.55;">{hasta["ai_ozeti"]}</div>
                     </div>
                     <div style="margin-top:10px; font-size:0.8rem; color:#64748B;">
-                        <b>Risk Faktörleri:</b> {" · ".join(f"⚠️ {r}" for r in hasta["risk_faktorleri"])}
+                        <b>Risk Faktörleri:</b> {", ".join(hasta["risk_faktorleri"]) if hasta["risk_faktorleri"] else "Bulunmuyor"}
                     </div>
                 </div>
                 """,
@@ -167,13 +162,12 @@ with tab_detay:
     seviye = aciliyet_seviyesi(hasta["aciliyet_skoru"])
     skor   = hasta["aciliyet_skoru"]
     brans_renk = BRANSLAR.get(hasta["brans"], {}).get("renk", "#1A3A6B")
-    brans_icon = BRANSLAR.get(hasta["brans"], {}).get("icon", "🏥")
 
     st.markdown("<br>", unsafe_allow_html=True)
     d1, d2 = st.columns([1, 1], gap="large")
 
     with d1:
-        st.markdown('<div class="section-title">👤 Hasta Bilgileri</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Hasta Bilgileri</div>', unsafe_allow_html=True)
         st.markdown(
             f"""
             <div class="triage-card">
@@ -183,35 +177,35 @@ with tab_detay:
                     <tr><td style="color:#64748B; padding:6px 0;"><b>Yaş</b></td>
                         <td>{hasta["yas"]}</td></tr>
                     <tr><td style="color:#64748B; padding:6px 0;"><b>Randevu Saati</b></td>
-                        <td>🕐 {hasta["randevu"]}</td></tr>
+                        <td>{hasta["randevu"]}</td></tr>
                     <tr><td style="color:#64748B; padding:6px 0;"><b>Hasta ID</b></td>
                         <td><code>{hasta["id"]}</code></td></tr>
                     <tr><td style="color:#64748B; padding:6px 0;"><b>Önerilen Branş</b></td>
-                        <td style="color:{brans_renk}; font-weight:600;">{brans_icon} {hasta["brans"]}</td></tr>
+                        <td style="color:{brans_renk}; font-weight:600;">{hasta["brans"]}</td></tr>
                     <tr><td style="color:#64748B; padding:6px 0;"><b>Aciliyet</b></td>
-                        <td><span class="{seviye['badge']}">{seviye['emoji']} {seviye['label']} ({skor}/10)</span></td></tr>
+                        <td><span class="{seviye['badge']}">{seviye['label']} ({skor}/10)</span></td></tr>
                 </table>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        st.markdown('<div class="section-title">⚠️ Risk Faktörleri</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Risk Faktörleri</div>', unsafe_allow_html=True)
         riskler_html = "".join(
-            f'<div style="padding:8px 12px; background:#FEF3C7; border-radius:8px; margin-bottom:8px; font-size:0.85rem; color:#92400E;">⚠️ {r}</div>'
+            f'<div style="padding:8px 12px; background:#FEF3C7; border-radius:8px; margin-bottom:8px; font-size:0.85rem; color:#92400E;">{r}</div>'
             for r in hasta["risk_faktorleri"]
         )
         st.markdown(f'<div class="triage-card">{riskler_html}</div>', unsafe_allow_html=True)
 
     with d2:
-        st.markdown('<div class="section-title">🔬 Semptom Analizi</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Semptom Analizi</div>', unsafe_allow_html=True)
         semptomlar_html = "".join(
-            f'<div style="padding:8px 12px; background:#EFF6FF; border-radius:8px; margin-bottom:8px; font-size:0.85rem; color:#1E40AF;">🔹 {s}</div>'
+            f'<div style="padding:8px 12px; background:#EFF6FF; border-radius:8px; margin-bottom:8px; font-size:0.85rem; color:#1E40AF;">{s}</div>'
             for s in hasta["semptomlar"]
         )
         st.markdown(f'<div class="triage-card">{semptomlar_html}</div>', unsafe_allow_html=True)
 
-        st.markdown('<div class="section-title">🤖 Yapay Zeka Özet Raporu</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Yapay Zeka Özet Raporu</div>', unsafe_allow_html=True)
         st.markdown(
             f"""
             <div class="triage-card" style="background:#F8FAFF; border:1px solid #DBEAFE;">
@@ -220,7 +214,7 @@ with tab_detay:
                 </div>
                 <hr style="border:none; border-top:1px solid #E2E8F0; margin:14px 0;">
                 <div style="font-size:0.78rem; color:#94A3B8;">
-                    🤖 Bu özet yapay zeka tarafından üretilmiştir. Nihai klinik karar hekime aittir.
+                    Bu özet yapay zeka tarafından üretilmiştir. Nihai klinik karar hekime aittir.
                 </div>
             </div>
             """,

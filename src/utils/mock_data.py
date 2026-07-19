@@ -9,27 +9,27 @@ from datetime import datetime, timedelta
 
 # ── Branş kataloğu ──────────────────────────────────────────────────────────
 BRANSLAR = {
-    "Dahiliye":      {"icon": "🫁", "renk": "#3B82F6"},
-    "Kardiyoloji":   {"icon": "❤️",  "renk": "#EF4444"},
-    "Nöroloji":      {"icon": "🧠", "renk": "#8B5CF6"},
-    "Ortopedi":      {"icon": "🦴", "renk": "#F59E0B"},
-    "Gastroloji":    {"icon": "🫃", "renk": "#10B981"},
-    "Göz Hastalıkları": {"icon": "👁️", "renk": "#06B6D4"},
-    "Kulak Burun Boğaz": {"icon": "👂", "renk": "#F97316"},
-    "Deri Hastalıkları": {"icon": "🩹", "renk": "#EC4899"},
-    "Psikiyatri":    {"icon": "🧘", "renk": "#6366F1"},
-    "Acil":          {"icon": "🚨", "renk": "#DC2626"},
+    "Dahiliye":      {"icon": "", "renk": "#3B82F6"},
+    "Kardiyoloji":   {"icon": "", "renk": "#EF4444"},
+    "Nöroloji":      {"icon": "", "renk": "#8B5CF6"},
+    "Ortopedi":      {"icon": "", "renk": "#F59E0B"},
+    "Gastroloji":    {"icon": "", "renk": "#10B981"},
+    "Göz Hastalıkları": {"icon": "", "renk": "#06B6D4"},
+    "Kulak Burun Boğaz": {"icon": "", "renk": "#F97316"},
+    "Deri Hastalıkları": {"icon": "", "renk": "#EC4899"},
+    "Psikiyatri":    {"icon": "", "renk": "#6366F1"},
+    "Acil":          {"icon": "", "renk": "#DC2626"},
 }
 
 # ── Aciliyet seviyesi yardımcı ──────────────────────────────────────────────
 def aciliyet_seviyesi(skor: int) -> dict:
     """1-10 arasındaki skoru seviyeye dönüştür."""
     if skor >= 8:
-        return {"label": "Yüksek Aciliyet", "badge": "badge-red",   "bar": "urgency-bar-fill-red",    "emoji": "🔴"}
+        return {"label": "Yüksek Aciliyet", "badge": "badge-red",   "bar": "urgency-bar-fill-red",    "emoji": ""}
     elif skor >= 5:
-        return {"label": "Orta Aciliyet",   "badge": "badge-yellow", "bar": "urgency-bar-fill-yellow", "emoji": "🟡"}
+        return {"label": "Orta Aciliyet",   "badge": "badge-yellow", "bar": "urgency-bar-fill-yellow", "emoji": ""}
     else:
-        return {"label": "Düşük Aciliyet",  "badge": "badge-green",  "bar": "urgency-bar-fill-green",  "emoji": "🟢"}
+        return {"label": "Düşük Aciliyet",  "badge": "badge-green",  "bar": "urgency-bar-fill-green",  "emoji": ""}
 
 def aciliyet_kart_class(skor: int) -> str:
     if skor >= 8:  return "triage-card triage-card-emergency"
