@@ -104,12 +104,88 @@ Sprint 1 sonunda takım olarak gerçekleştirdiğimiz süreç değerlendirme top
 ---
 
 ## 📅 Sprint 2 (6 - 19 Temmuz)
+**Hedef:** Triyaj sürecinin gerçekçi klinik verilerle çalıştırılması amacıyla hedef kullanıcı rolünün **Triyaj Çalışanı** olarak revize edilmesi, **DDXPlus** veri kümesi üzerinde **LightGBM** poliklinik branş ve aciliyet sınıflandırma modelinin eğitilmesi, modelin **FastAPI** ile REST API üzerinden sunulması ve **Streamlit** uygulamasının çok sayfalı (multipage) arayüze geçirilerek gerçek model çıktısı ile entegrasyonu.
 
 ## 🏗️ Proje Klasör Mimarisi
 
+```text
+SmartTriage_Grup131/
+│
+├── api/                    # FastAPI Model Sunumu (Backend)
+│   ├── api.py              # ML modelini sunan REST API servisi
+│   ├── streamlit_client_example.py # Streamlit veya harici istemci bağlantı örneği
+│   └── util/               # Model tahmin girdileri ve etiket eşleme şemaları
+│       ├── feature_schema.json
+│       ├── label_classes.json
+│       └── release_evidences.json
+│
+├── assets/                 # Proje görsel materyalleri (SS, ClickUp Boards vb.)
+│   ├── Clickup_board_sprint2.png
+│   ├── Ana_Sayfa1.png
+│   ├── Ana_Sayfa_2.png
+│   ├── Ana_Sayfa_3.png
+│   ├── Hasta_Ozetleri_1.png
+│   ├── Hasta_Ozetleri_2.png
+│   ├── Hasta_Ozetleri_Detaylı_Inceleme.png
+│   └── Hasta_Ozetleri_detaylı_Inceleme_2.png
+│
+├── model/                  # Eğitilmiş Makine Öğrenmesi Modeli
+│   └── ddx_lightgbm_model.txt # Eğitilmiş LightGBM modeli
+│
+├── pages/                  # Çok Sayfalı Streamlit Arayüzü
+│   └── 2_Hasta_Ozetleri.py # Hekim / Triyaj Görevlisi Hasta Takip Raporlama Ekranı
+│
+├── src/                    # Yardımcı Modüller ve Tasarım Elemanları
+│   ├── utils/              # Arayüz tasarımları, mock veriler ve stiller
+│   │   ├── mock_data.py
+│   │   └── styles.py
+│   ├── db_manager.py       # Kalıcı veri depolama yöneticisi (Gelecek Planı)
+│   ├── llm_service.py      # LLM API entegrasyon modülü
+│   └── ml_model.py         # Yerel ML tahmin yükleme fonksiyonları
+│
+├── .env                    # API Anahtarları (Yerel ortamda tutulur, Git'e eklenmez!)
+├── Ana_Sayfa.py            # Streamlit Uygulaması Giriş Sayfası (Ön Triyaj Giriş Formu)
+├── ai_handle.py            # Gemini API ile serbest metinden semptom çıkarım fonksiyonları
+├── requirements.txt        # Güncellenmiş proje bağımlılıkları (FastAPI, LightGBM vb.)
+└── README.md               # Proje ana dökümantasyonu
+```
+
 ## Uygulama Arayüzü ve Ekran Görüntüleri
 
-#### Sprint 2 Hedefleri
+### 1. Hasta Ön-Triyaj Giriş Ekranı (Boş Form)
+Triyaj görevlisinin hastayı sisteme kaydettiği, şikayetini serbest metin olarak girdiği ana karşılama arayüzü:
+![alt text](assets/Ana_Sayfa1.png)
+
+### 2. Hasta Formunun Doldurulması ve Semptom Girişi
+Kullanıcının demografik bilgileri, şikayet süresi, şiddeti ve dökümantasyonu girildikten sonra analize hazır hali:
+![alt text](assets/Ana_Sayfa_2.png)
+
+### 3. Ön-Triyaj Yapay Zeka & Model Analiz Çıktısı
+Form gönderildiğinde Gemini API ile semptom kodlarının (JSON) çıkarılması ve LightGBM modelinin ürettiği branş ve aciliyet skorunun anlık görselleştirilmesi:
+![alt text](assets/Ana_Sayfa_3.png)
+
+### 4. Hasta Özetleri Paneli (Randevu Listesi)
+Kayıtlı hastaların toplu listesi, aciliyet barı seviyeleri, yapay zeka özetleri ve önerilen poliklinik branşlarının hekim/triyaj çalışanı tarafından izlendiği panel:
+![alt text](assets/Hasta_Ozetleri_1.png)
+
+### 5. Dinamik Filtreleme ve Metrik Kartları
+Hastaların aciliyet derecesine göre süzülmesi ve günlük triyaj durumunun (Yüksek, Orta, Düşük) metriklerle takibi:
+![alt text](assets/Hasta_Ozetleri_2.png)
+
+### 6. Detaylı İnceleme Sekmesi ve Risk Faktörleri
+Seçilen hastaya dair tüm verilerin (Hasta ID, randevu saati, risk faktörleri ve detaylı semptom analizleri) klinik karar destek amaçlı sunulması:
+![alt text](assets/Hasta_Ozetleri_Detaylı_Inceleme.png)
+![alt text](assets/Hasta_Ozetleri_detaylı_Inceleme_2.png)
+
+### 1. Backlog Düzeni ve Story Seçimleri (User Stories)
+Sprint 2 kapsamında hedeflerimize ulaşmak adına iş listemiz (Backlog) aşağıdaki Kullanıcı Hikayelerine (User Stories) bölünmüş ve ClickUp üzerinde önceliklendirilmiştir:
+
+*   **US-04 (Makine Öğrenmesi Modeli Eğitimi & Entegrasyonu):** Bir *Veri Bilimci* olarak, DDXPlus veri seti üzerinde yüksek doğruluklu bir LightGBM sınıflandırma modeli eğitmek ve bunu model dosyası olarak kaydetmek istiyorum, böylece semptomlardan branş ve aciliyet tahminlerini gerçekçi yapabilmeyi hedefliyorum. *(Durum: Tamamlandı - 8 SP)*
+*   **US-05 (FastAPI ile Model Servisi):** Bir *Yazılım Geliştirici* olarak, eğitilen LightGBM modelini sunan ve Streamlit ile haberleşen bir FastAPI REST API sunucusu ayağa kaldırmak istiyorum, böylece tahmin mekanizmasını modüler ve genişletilebilir hale getirmeyi amaçlıyorum. *(Durum: Tamamlandı - 5 SP)*
+*   **US-06 (Gemini API ile Semptom Çıkarımı):** Bir *Yapay Zeka Geliştiricisi* olarak, hastanın girdiği doğal dildeki şikayetten modelin anlayabileceği DDXPlus semptom kodlarını (E_...) sıfır hata ile JSON formatında çıkaran bir Gemini prompt ve API entegrasyonu yazmak istiyorum. *(Durum: Tamamlandı - 5 SP)*
+*   **US-07 (Çok Sayfalı Streamlit UI & Rol Revizyonu):** Bir *Triyaj Görevlisi* olarak, hastanın bilgilerini girdiğimde modelin aciliyet ve branş tahminlerini görebileceğim bir Ana Sayfa ile tüm hasta kayıtlarını inceleyip filtreleyebileceğim bir Hasta Özetleri paneli görmek istiyorum. *(Durum: Tamamlandı - 8 SP)*
+
+![alt text](assets/Clickup_board_sprint2.png)
 
 ### 2. Daily Scrum (Günlük Senkronizasyon)
 Sprint boyunca ekibimiz düzenli aralıklarla bir araya gelerek süreç takibi yapmış ve aşağıdaki 3 temel soruya yanıt aramıştır:
@@ -120,7 +196,7 @@ Sprint boyunca ekibimiz düzenli aralıklarla bir araya gelerek süreç takibi y
 *   **Meryem (Developer):** Yeni verilerle uyumlu, dinamik kullanıcı girdilerien sahip Streamlit UI ekranlarını (Triyaj paneli ve Hasta özetleri) kodladı. *Engeli yok.*
 
 ### 3. Sprint Review (Sprint Değerlendirmesi ve Demo)
-*   **Sprint Hedefi:** Değiştirdiğimiz use case doğrultusunda, yeni hedef kullanıcı olan **Triyaj Çalışanı** için Streamlit üzerinde hasta verileri girilen, modelin triyaj kararını gösterilen ve geçmiş hasta raporlarının sunulduğu 2 panel (Triyaj Ana Sayfa, Hata Raporları) içeren bir MVP (Minimum Uygulanabilir Ürün) UI prototipinin ayağa kaldırılması.
+*   **Sprint Hedefi:** Değiştirdiğimiz use case doğrultusunda, yeni hedef kullanıcı olan **Triyaj Çalışanı** için Streamlit üzerinde hasta verileri girilen, modelin triyaj kararını gösterilen ve geçmiş hasta raporlarının sunulduğu 2 panel (Triyaj Ana Sayfa, Hasta Raporları) içeren bir MVP (Minimum Uygulanabilir Ürün) UI prototipinin ayağa kaldırılması.
   
 *   **Çıktı Değerlendirmesi:** Belirlenen hedefe %100 oranında ulaşıldı. Model entegrasyonuyla birlikte sistem kullanım kılavuzuyla birlikte kullanıma hazır hale geldi, kullanıcı dostu arayüz tasarımı ve başarılı çalışan arka uç ile hedefler başarıyla tamamlandı ve akademinin incelemesine sunuldu.
 
