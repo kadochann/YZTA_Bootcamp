@@ -1,19 +1,28 @@
 # 🩺 Akıllı Ön-Triyaj ve Doktor Karar Destek Paneli
-### 🚀 YZTA Bootcamp 2026 - Grup 131 Proje Prototipi (MVP Phase 1)
+### 🚀 YZTA Bootcamp 2026 - Grup 131 Proje Prototipi 
 
 Bu proje, **Yapay Zeka ve Teknoloji Akademisi (YZTA) Bootcamp 2026 - 5. Akademi Dönemi** kapsamında, Grup 131 tarafından geliştirilen yapay zeka destekli bir ön-triyaj ve klinik karar destek sistemi prototipidir. 
 
 Projenin temel amacı; hastaların randevu öncesinde şikâyetlerini doğal dilde ifade edebileceği kontrollü bir arayüz sunmak, bu şikâyetleri yapılandırılmış verilere dönüştürerek klasik makine öğrenmesi modelleriyle olası branş ve aciliyet skorunu tahmin etmek ve hekime muayene öncesinde hazırlık şansı tanıyan dinamik bir özet panel üretmektir.
 
----
-
 ## 🎯 Temel Özellikler (MVP Kapsamı)
 * **Yapay Zeka Destekli Metin Analizi:** Google Gemini API kullanılarak hastanın doğal dildeki şikayetinden tıbbi semptomların sıfır hata ile JSON formatında ayıklanması.
-* **Akıllı Branş ve Aciliyet Tahmini:** `scikit-learn` (Random Forest / XGBoost) modelleriyle semptomlar üzerinden poliklinik yönlendirmesi ve 1-10 arası aciliyet skoru üretimi.
-* **Hafif ve Hızlı Arayüz (Streamlit):** Hem hasta giriş ekranını hem de hekim karar destek panelini tek bir Python ekosisteminde birleştiren kullanıcı dostu arayüz.
+* **Akıllı Branş ve Aciliyet Tahmini:** `scikit-learn` (LightGBM) modeliyle semptomlar üzerinden poliklinik yönlendirmesi ve 1-10 arası aciliyet skoru üretimi.
+* **Hafif ve Hızlı Arayüz (Streamlit):** Hem hasta bilgileriyle triyaj panelini hem de hasta özetlerinin yer aldığı rapor panelini tek bir Python ekosisteminde birleştiren kullanıcı dostu arayüz.
 * **Etik Yapay Zeka Yaklaşımı:** Kesinlikle tanı koymayan, "ön bilgilendirme amaçlı karar destek verisidir" uyarısı barındıran klinik sınır koruması.
 
+
+## 🔄 Scrum Süreci ve Sprint Yönetimi
+Projemiz, Scrum metodolojisine uygun olarak yönetilmektedir. İş takibi, backlog yönetimi ve sprint tahtası için ClickUp kullanılmıştır.
+
+
 ---
+
+
+## 📅 Sprint 1 (İlk Aşama Teslimi - 5 Temmuz)
+**Hedef:** Hızlı prototipleme amacıyla Streamlit üzerinde uçtan uca çalışan (End-to-End) MVP'nin ayağa kaldırılması, LLM JSON entegrasyonunun tamamlanması ve temel ML modelinin arayüze bağlanması.
+
+Projemiz, Scrum metodolojisine uygun olarak yönetilmektedir. İş takibi, backlog yönetimi ve sprint tahtası için ClickUp kullanılmıştır. İlk sprint kapsamında projenin **arayüz (UI) prototipi** tasarlanmış ve veri akış simülasyonu uçtan uca ayağa kaldırılmıştır.
 
 ## 🏗️ Proje Klasör Mimarisi
 
@@ -54,14 +63,6 @@ Filtreleme mekanizması sayesinde aciliyet seviyesine ve poliklinik branşına g
 Klinik yönetiminin günlük hasta trendini, aciliyet dağılımlarını ve branş bazlı yoğunlukları izleyebileceği veri görselleştirme alanı:
 ![alt text](assets/app_SS_5.jpeg)
 
-## 🔄 Scrum Süreci ve Sprint Yönetimi
-Projemiz, Scrum metodolojisine uygun olarak yönetilmektedir. İş takibi, backlog yönetimi ve sprint tahtası için ClickUp kullanılmıştır.
-
-## 📅 Sprint 1 (İlk Aşama Teslimi - 5 Temmuz)
-**Hedef:** Hızlı prototipleme amacıyla Streamlit üzerinde uçtan uca çalışan (End-to-End) MVP'nin ayağa kaldırılması, LLM JSON entegrasyonunun tamamlanması ve temel ML modelinin arayüze bağlanması.
-
-Projemiz, Scrum metodolojisine uygun olarak yönetilmektedir. İş takibi, backlog yönetimi ve sprint tahtası için ClickUp kullanılmıştır. İlk sprint kapsamında projenin **arayüz (UI) prototipi** tasarlanmış ve veri akış simülasyonu uçtan uca ayağa kaldırılmıştır.
-
 ### 1. Backlog Düzeni ve Story Seçimleri (User Stories)
 Sprint 1 kapsamında kullanıcı odaklı geliştirme yapabilmek adına iş listemiz (Backlog) aşağıdaki Kullanıcı Hikayelerine (User Stories) bölünmüş ve ClickUp üzerinde önceliklendirilmiştir:
 
@@ -98,6 +99,39 @@ Sprint 1 sonunda takım olarak gerçekleştirdiğimiz süreç değerlendirme top
 *   **Neleri İyi Yaptık? (What went well?):** Ekip içi görev dağılımı çok netti. Kodlama sürecine geçmeden önce ekran tasarımlarını hızlıca netleştirmek Streamlit geliştirme sürecini ciddi oranda hızlandırdı.
 *   **Neler Geliştirilebilir? (What can be improved?):** İlk aşamada arayüze odaklandığımız için gerçek verilerin analizine daha az vakit ayırdık. Bir sonraki sprintte veri analitiği kısmına daha erken başlamalıyız.
 *   **Sprint 2 Aksiyon Planı (Action Items):** Gelecek sprintte Kaggle veri setlerinin temizlenerek Scikit-Learn modellerinin (Random Forest / XGBoost) eğitilmesi ve bu aşamada kurulan Streamlit UI yapısına entegre edilmesi önceliklendirilecektir.
+
+  
+---
+
+## 📅 Sprint 2 (6 - 19 Temmuz)
+
+## 🏗️ Proje Klasör Mimarisi
+
+## Uygulama Arayüzü ve Ekran Görüntüleri
+
+#### Sprint 2 Hedefleri
+
+### 2. Daily Scrum (Günlük Senkronizasyon)
+Sprint boyunca ekibimiz düzenli aralıklarla bir araya gelerek süreç takibi yapmış ve aşağıdaki 3 temel soruya yanıt aramıştır:
+1. *Dün ne yaptım?* | 2. *Bugün ne yapacağım?* | 3. *Önümde bir engel (Blocker) var mı?*
+
+*   **Kadriye (Scrum Master):** ClickUp üzerindeki iş paketlerini organize etti, use case'in güncellenmesi sürecini yönetti, UI revizyonlarını ve Teknik dokümanları yönetti. *Engeli yok.*
+*   **Yahya Fuat (Product Owner):** Güncellenen use case'e uygun veriseti araştırmaları yaptı, seçilen verisetinin temizlenmesi ve veri işleme aşamalarını üstlendi. LLM ile veri seti arasındaki bağlantıyı düzenledi. *Engeli yok.*
+*   **Meryem (Developer):** Yeni verilerle uyumlu, dinamik kullanıcı girdilerien sahip Streamlit UI ekranlarını (Triyaj paneli ve Hasta özetleri) kodladı. *Engeli yok.*
+
+### 3. Sprint Review (Sprint Değerlendirmesi ve Demo)
+*   **Sprint Hedefi:** Değiştirdiğimiz use case doğrultusunda, yeni hedef kullanıcı olan **Triyaj Çalışanı** için Streamlit üzerinde hasta verileri girilen, modelin triyaj kararını gösterilen ve geçmiş hasta raporlarının sunulduğu 2 panel (Triyaj Ana Sayfa, Hata Raporları) içeren bir MVP (Minimum Uygulanabilir Ürün) UI prototipinin ayağa kaldırılması.
+  
+*   **Çıktı Değerlendirmesi:** Belirlenen hedefe %100 oranında ulaşıldı. Model entegrasyonuyla birlikte sistem kullanım kılavuzuyla birlikte kullanıma hazır hale geldi, kullanıcı dostu arayüz tasarımı ve başarılı çalışan arka uç ile hedefler başarıyla tamamlandı ve akademinin incelemesine sunuldu.
+
+### 4. Sprint Retrospective (Kapanış ve Değerlendirme)
+Sprint 2 sonunda takım olarak gerçekleştirdiğimiz süreç değerlendirme toplantısı sonuçları:
+
+*   **Neleri İyi Yaptık? (What went well?):** İletişimimiz aktifti. Sonradan use case ve verisetini değiştirirken herkes aktif görev almasıyla süreci hızlı yönettik. Ana taslağı oluşturduk, LightGBM ile eğittiğimiz modelimiz çok fonksiyonlu olarak işe yaramaktadır.
+
+*   **Neler Geliştirilebilir? (What can be improved?):** Hasta kayıtları ve semptomların handle edilmesi konusunu biraz daha düşünüp son sprintte geliştirme planımızı daha net oturtmalıyız.
+*   **Sprint 2 Aksiyon Planı (Action Items):** Explainable AI bakımında LLM'in semptomları daha net ve doğru işleyebileceği ve uygun formata dönüştürebileceği bir pipeline geliştirilecek. Bunun için araştırma ile doğru planlama yapılacak. Son olarak uygulamaya rötuşlar yapılacak.
+
 
 ## 👥 Ekip ve Görev Dağılımı (Grup 131)
 
