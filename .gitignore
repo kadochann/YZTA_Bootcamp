@@ -10,7 +10,7 @@ __pycache__/
 
 # Veri ve Modeller (GitHub'a atılmamalı, herkes lokalinde üretmeli/koymalı)
 data/
-models/*.pkl
+model/*.txt
 
 # Çevresel Değişkenler (API Key vb.)
 .env

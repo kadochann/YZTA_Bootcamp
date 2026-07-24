@@ -13,10 +13,23 @@ import os
 import json
 import numpy as np
 import lightgbm as lgb
+import sys
 from scipy.sparse import csr_matrix, hstack
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Add root project dir to path so we can import src
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from dotenv import load_dotenv
+load_dotenv()
+
+from src.llm_service import extract_symptoms, map_evidences_and_urgency
+from src.rag_service import get_rag_service
 
 MODEL_PATH = os.environ.get('DDX_MODEL_PATH', '../model/ddx_lightgbm_model.txt')
 CLASSES_PATH = os.environ.get('DDX_CLASSES_PATH', './util/label_classes.json')
@@ -70,7 +83,7 @@ def load_artifacts():
 # ---------- Request / response schemas ----------
 class PredictRequest(BaseModel):
     age: int = Field(..., ge=0, le=120)
-    sex: Optional[str] = Field(None, pattern="^[MF]$", description="Omit if unknown/undisclosed")
+    sex: Optional[str] = Field(None, pattern="^[MFE]$", description="Omit if unknown/undisclosed")
     evidences: list[str] = Field(
         ..., description="List of evidence tokens, e.g. ['E_53', 'E_54_@_V_112']"
     )
@@ -89,6 +102,20 @@ class PredictResponse(BaseModel):
     top_prediction: Diagnosis
     differential: list[Diagnosis]
     unrecognized_evidences: list[str]
+
+class TriageRequest(BaseModel):
+    full_name: str
+    age: int
+    sex: str
+    complaint: str
+
+class TriageResponse(BaseModel):
+    patient_name: str
+    age: int
+    sex: str
+    urgency: int
+    symptoms: list[str]
+    prediction: PredictResponse
 
 
 # ---------- Feature building for a single request ----------
@@ -134,6 +161,46 @@ def get_evidences():
 @app.get("/health")
 def health():
     return {"status": "ok", "vocab_size": _state.get('vocab_size'), "num_classes": len(_state.get('classes', []))}
+
+
+@app.post("/triage", response_model=TriageResponse)
+def triage(req: TriageRequest):
+    try:
+        # 1. Extraction: 1 LLM call
+        symptoms = extract_symptoms(req.complaint)
+        
+        # 2. Retrieval & Enrichment (RAG)
+        rag_service = get_rag_service()
+        enriched_results = []
+        for sym in symptoms:
+            result = rag_service.retrieve_and_enrich(sym)
+            enriched_results.append(result)
+            
+        # 3. Evidence Mapping: 1 LLM call
+        mapping = map_evidences_and_urgency(enriched_results)
+        
+        # 4. Local ML Prediction
+        predict_req = PredictRequest(
+            age=req.age,
+            sex=req.sex[0].upper() if req.sex else None, # M or F or E
+            evidences=mapping["evidences"],
+            initial_evidence=mapping["initial_evidence"],
+            top_k=3
+        )
+        prediction_response = predict(predict_req)
+        
+        # 5. Build Response
+        return TriageResponse(
+            patient_name=req.full_name,
+            age=req.age,
+            sex=req.sex,
+            urgency=mapping["urgency"],
+            symptoms=symptoms,
+            prediction=prediction_response
+        )
+    except Exception as e:
+        logger.exception("Error during triage workflow")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/predict", response_model=PredictResponse)

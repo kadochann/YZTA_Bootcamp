@@ -10,8 +10,8 @@ import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from src.utils.styles import MAIN_CSS
-from src.utils.mock_data import get_mock_istatistikler, BRANSLAR, mock_llm_analiz, aciliyet_seviyesi
 import time
+import requests
 
 # ── Sayfa konfigürasyonu ─────────────────────────────────────────────────────
 st.set_page_config(
@@ -33,27 +33,17 @@ if "analiz_sonucu" not in st.session_state:
 
 # ── Top Navbar ──────────────────────────────────────────────────────────────
 with st.container(key="navbar"):
-    col_title, col_nav = st.columns([3, 2], vertical_alignment="center")
-
-    with col_title:
-        st.markdown(
-            """
-            <div style="display:flex; align-items:center; gap:12px; padding: 5px 0;">
-                <div>
-                    <div style="font-size:2.7rem; font-weight:800; color:#ffffff; line-height:1.1; letter-spacing:-0.5px;">MediTriaj</div>
-                    <div style="font-size:1.15rem; color:#B8C8E0; font-weight:600; margin-top:4px;">Akıllı Ön-Triyaj ve Doktor Karar Destek Paneli</div>
-                </div>
+    st.markdown(
+        """
+        <div style="display:flex; align-items:center; gap:12px; padding: 5px 0;">
+            <div>
+                <div style="font-size:2.7rem; font-weight:800; color:#ffffff; line-height:1.1; letter-spacing:-0.5px;">MediTriaj</div>
+                <div style="font-size:1.15rem; color:#B8C8E0; font-weight:600; margin-top:4px;">Akıllı Ön-Triyaj ve Doktor Karar Destek Paneli</div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with col_nav:
-        c1, c2 = st.columns([1, 1])
-        with c1:
-            st.page_link("Ana_Sayfa.py", label="🏠 Ana Sayfa", use_container_width=True)
-        with c2:
-            st.page_link("pages/2_Hasta_Ozetleri.py", label="📋 Hasta Özetleri", use_container_width=True)
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 st.markdown("<hr style='margin-top: 5px; margin-bottom: 20px; border-color: #E2E8F0;'>", unsafe_allow_html=True)
 
@@ -120,14 +110,7 @@ with col_form:
         with c2:
             yas = st.number_input("Yaşınız", min_value=1, max_value=120, value=35, step=1)
 
-        c3, c4 = st.columns(2)
-        with c3:
-            cinsiyet = st.selectbox("Cinsiyet", ["Belirtmek istemiyorum", "Erkek", "Kadın"])
-        with c4:
-            sure = st.selectbox(
-                "Şikayet Süresi",
-                ["Birkaç saat", "1-3 gün", "3-7 gün", "1-4 hafta", "1 aydan fazla"],
-            )
+        cinsiyet = st.selectbox("Cinsiyet", ["Erkek", "Kadın"])
 
         sikayet = st.text_area(
             "Şikayetinizi anlatın",
@@ -138,39 +121,40 @@ with col_form:
             height=140,
         )
 
-        gecmis = st.text_area(
-            "Geçmiş hastalık / ilaç kullanımı (isteğe bağlı)",
-            placeholder="Örn: Hipertansiyon, metformin kullanıyorum...",
-            height=80,
-        )
-
-        siddet = st.slider(
-            "Şikayetinizin şiddeti (1 = hafif, 10 = çok şiddetli)",
-            min_value=1, max_value=10, value=5,
-        )
-
         gonder = st.form_submit_button("Analiz Et", use_container_width=True)
 
     if gonder:
         if not sikayet.strip():
             st.error("Lütfen şikayetinizi açıklayan bir metin girin.")
         else:
-            with st.spinner("Yapay zeka şikayetinizi analiz ediyor..."):
-                time.sleep(1.5)  # Gerçek API çağrısını simüle et
-                sonuc = mock_llm_analiz(sikayet, yas)
-
-            # Sohbet geçmişine ekle
-            st.session_state.chat_gecmisi.append({
-                "tur": "kullanici",
-                "mesaj": f"**{ad_soyad or 'Hasta'}** ({yas} yaş) — *Şiddet: {siddet}/10*\n\n{sikayet}",
-            })
-            st.session_state.chat_gecmisi.append({
-                "tur": "ai",
-                "mesaj": sonuc["hasta_mesaji"],
-            })
-            st.session_state.analiz_sonucu = sonuc
-            st.session_state.analiz_tamamlandi = True
-            st.rerun()
+            with st.spinner("Yapay zeka şikayetinizi analiz ediyor (API)..."):
+                try:
+                    payload = {
+                        "full_name": ad_soyad or 'Hasta',
+                        "age": yas,
+                        "sex": "M" if cinsiyet == "Erkek" else "E",
+                        "complaint": sikayet
+                    }
+                    response = requests.post("http://127.0.0.1:8000/triage", json=payload)
+                    response.raise_for_status()
+                    sonuc = response.json()
+                    
+                    st.session_state.chat_gecmisi.append({
+                        "tur": "kullanici",
+                        "mesaj": f"**{ad_soyad or 'Hasta'}** ({yas} yaş)\n\n{sikayet}",
+                    })
+                    
+                    top_p = sonuc.get("prediction", {}).get("top_prediction", {}).get("pathology", "Bilinmiyor")
+                    st.session_state.chat_gecmisi.append({
+                        "tur": "ai",
+                        "mesaj": f"Şikayetleriniz alındı ve değerlendirildi. Yüksek olasılıklı durum: **{top_p}**. Bu bir tanı değildir, lütfen en kısa sürede doktorunuza başvurun."
+                    })
+                    
+                    st.session_state.analiz_sonucu = sonuc
+                    st.session_state.analiz_tamamlandi = True
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"API Hatası: {e}")
 
 # ─── SAĞ: Analiz Sonucu & Sohbet ─────────────────────────────────────────────
 with col_sonuc:
@@ -192,39 +176,76 @@ with col_sonuc:
         )
     else:
         sonuc = st.session_state.analiz_sonucu
-        seviye = aciliyet_seviyesi(sonuc["aciliyet_skoru"])
-        skor = sonuc["aciliyet_skoru"]
-        bar_oran = int(skor / 10 * 100)
+        
+        # API Response structure mapping
+        hasta_adi = sonuc.get("patient_name", "Hasta")
+        yas = sonuc.get("age", 0)
+        cins = "Erkek" if sonuc.get("sex") == "M" else "Kadın" if sonuc.get("sex") == "E" else "Bilinmiyor"
+        skor = sonuc.get("urgency", 5)
+        semptomlar = sonuc.get("symptoms", [])
+        
+        prediction = sonuc.get("prediction", {})
+        top_pred = prediction.get("top_prediction", {}).get("pathology", "Bilinmiyor")
+        top_prob = prediction.get("top_prediction", {}).get("probability", 0) * 100
+        
+        differentials = prediction.get("differential", [])
+        
+        # Colors for urgency
+        if skor >= 8:
+            urgency_color = "#DC2626" # Red
+            urgency_label = "Yüksek Aciliyet"
+            kart_class = "triage-card triage-card-emergency"
+        elif skor >= 5:
+            urgency_color = "#F59E0B" # Yellow
+            urgency_label = "Orta Aciliyet"
+            kart_class = "triage-card triage-card-medium"
+        else:
+            urgency_color = "#10B981" # Green
+            urgency_label = "Düşük Aciliyet"
+            kart_class = "triage-card triage-card-low"
 
         st.markdown('<div class="section-title">Analiz Sonucu</div>', unsafe_allow_html=True)
 
-        # Özet kart
-        kart_class = "triage-card triage-card-emergency" if skor >= 8 else \
-                     "triage-card triage-card-medium"    if skor >= 5 else \
-                     "triage-card triage-card-low"
-
-        brans_renk = BRANSLAR.get(sonuc["brans"], {}).get("renk", "#1A3A6B")
+        # Differential list HTML
+        diff_html = ""
+        for i, diff in enumerate(differentials[:3]):
+            pathology = diff.get("pathology", "")
+            prob = diff.get("probability", 0) * 100
+            diff_html += f'<li style="margin-bottom: 4px;"><b>{pathology}</b> (%{prob:.1f})</li>'
 
         st.markdown(
             f"""
             <div class="{kart_class}">
+                <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 12px; margin-bottom: 16px;">
+                    <div style="font-size: 1.1rem; font-weight: 600; color: #1E293B;">{hasta_adi}</div>
+                    <div style="font-size: 0.9rem; color: #64748B;">Yaş: {yas} | Cinsiyet: {cins}</div>
+                </div>
+
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
                     <div>
-                        <div style="font-size:0.78rem; color:#64748B; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Önerilen Branş</div>
-                        <div style="font-size:1.6rem; font-weight:700; color:{brans_renk};">
-                            {sonuc["brans"]}
+                        <div style="font-size:0.78rem; color:#64748B; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">En Olası Durum (Tahmin)</div>
+                        <div style="font-size:1.6rem; font-weight:800; color:#1E293B;">
+                            {top_pred} <span style="font-size: 1rem; color: #64748B; font-weight: normal;">(%{top_prob:.1f})</span>
                         </div>
                     </div>
-                    <span class="{seviye['badge']}">{seviye['label']}</span>
+                    <div style="text-align: right;">
+                        <div style="font-size:0.78rem; color:#64748B; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Aciliyet Skoru</div>
+                        <div style="font-size: 1.6rem; font-weight: 800; color: {urgency_color};">
+                            {skor}/10
+                        </div>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: {urgency_color};">{urgency_label}</div>
+                    </div>
                 </div>
-                <div style="font-size:0.85rem; color:#475569; margin-bottom:4px;">
-                    Aciliyet Skoru: <b>{skor}/10</b>
+
+                <div style="font-size:0.9rem; color:#475569; margin-bottom: 16px;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">Ayırıcı Tanılar (İlk 3):</div>
+                    <ul style="margin-top: 0; padding-left: 20px; color: #475569;">
+                        {diff_html}
+                    </ul>
                 </div>
-                <div class="urgency-bar-wrap">
-                    <div class="{seviye['bar']}" style="width:{bar_oran}%;"></div>
-                </div>
-                <div style="font-size:0.82rem; color:#64748B;">
-                    <b>Tespit edilen semptomlar:</b> {", ".join(sonuc["semptomlar"]) if sonuc["semptomlar"] else "—"}
+
+                <div style="font-size:0.82rem; color:#64748B; border-top: 1px solid #E2E8F0; padding-top: 12px;">
+                    <b>Tespit edilen semptomlar:</b> {", ".join(semptomlar) if semptomlar else "—"}
                 </div>
             </div>
             """,
@@ -272,23 +293,7 @@ with col_sonuc:
             unsafe_allow_html=True,
         )
 
-# ── Hekim Paneli Geçiş ────────────────────────────────────────────────────────
-st.markdown("<br>", unsafe_allow_html=True)
-st.markdown('<div class="section-title">Hasta Özetleri Paneli (Doktorlar İçin)</div>', unsafe_allow_html=True)
 
-with st.container(border=True):
-    st.markdown(
-        """
-        <div style="padding: 10px 0;">
-            <div style="font-size: 1.1rem; font-weight: 700; color: #0F2544; margin-bottom: 6px;">Hasta Özetleri ve Karar Destek</div>
-            <div style="font-size: 0.88rem; color: #64748B; line-height: 1.5; margin-bottom: 16px;">
-                Doktorlar için hasta randevu listesini, ön-triyaj aciliyet skorlarını ve yapay zeka tarafından hazırlanan semptom özetlerini görüntüler.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.page_link("pages/2_Hasta_Ozetleri.py", label="Hasta Özetleri Paneline Geç", use_container_width=True)
 
 # ── Etik Uyarı ───────────────────────────────────────────────────────────────
 st.markdown("<br>", unsafe_allow_html=True)
