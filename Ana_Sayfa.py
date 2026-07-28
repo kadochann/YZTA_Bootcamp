@@ -10,6 +10,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from src.utils.styles import MAIN_CSS
+from src.utils.translations import translate_pathology, translate_symptom
 import time
 import requests
 
@@ -185,7 +186,9 @@ with col_sonuc:
         semptomlar = sonuc.get("symptoms", [])
         
         prediction = sonuc.get("prediction", {})
-        top_pred = prediction.get("top_prediction", {}).get("pathology", "Bilinmiyor")
+        top_pred = translate_pathology(
+            prediction.get("top_prediction", {}).get("pathology", "Bilinmiyor")
+        )
         top_prob = prediction.get("top_prediction", {}).get("probability", 0) * 100
         
         differentials = prediction.get("differential", [])
@@ -242,7 +245,7 @@ with col_sonuc:
                 unsafe_allow_html=True,
             )
             for diff in differentials[:3]:
-                pathology = diff.get("pathology", "")
+                pathology = translate_pathology(diff.get("pathology", ""))
                 prob = diff.get("probability", 0)
                 bar_pct = int(prob * 100)
                 st.markdown(
@@ -258,7 +261,7 @@ with col_sonuc:
             unsafe_allow_html=True,
         )
         if semptomlar:
-            symptom_md = "\n".join(f"- {s}" for s in semptomlar)
+            symptom_md = "\n".join(f"- {translate_symptom(s)}" for s in semptomlar)
             st.markdown(symptom_md)
         else:
             st.markdown("_Semptom tespit edilemedi._")
