@@ -16,4 +16,4 @@ model/*.txt
 .env
 
 #docker
-.docker-compose.yml
+docker-compose.yml
