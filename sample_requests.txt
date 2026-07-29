@@ -1,0 +1,63 @@
+# MediTriag - Örnek Test Verileri
+
+Aşağıdaki örnek verileri uygulamayı test etmek için Ana Sayfadaki forma yapıştırabilirsiniz.
+
+---
+
+### Örnek 1: Yüksek Aciliyet (Kalp Krizi Şüphesi)
+Ad Soyad: Ahmet Yılmaz
+TC Kimlik No: 12345678901
+Yaşınız: 58
+Cinsiyet: Erkek
+Şikayet:
+Yaklaşık 2 saattir göğsümün ortasında inanılmaz bir baskı ve ağrı var. Ağrı sol koluma ve çeneme doğru yayılıyor. Aynı zamanda soğuk soğuk terliyorum ve nefes almakta zorluk çekiyorum. Midem de bulanıyor.
+
+---
+
+### Örnek 2: Orta Aciliyet (Apandisit Şüphesi)
+Ad Soyad: Ayşe Kaya
+TC Kimlik No: 23456789012
+Yaşınız: 24
+Cinsiyet: Kadın
+Şikayet:
+Dün akşamdan beri karnımda bir ağrı var. Önce göbeğimin çevresinde başladı ama şimdi sağ alt tarafa doğru indi. Oraya dokunduğumda çok acıyor. Hafif ateşim var ve sabahtan beri hiçbir şey yiyemedim, midem çok bulanıyor.
+
+---
+
+### Örnek 3: Düşük Aciliyet (Üst Solunum Yolu Enfeksiyonu)
+Ad Soyad: Caner Demir
+TC Kimlik No: 34567890123
+Yaşınız: 35
+Cinsiyet: Erkek
+Şikayet:
+Üç gündür boğazım çok ağrıyor, yutkunmakta zorlanıyorum. Burnum sürekli akıyor ve ara sıra kuru öksürüğüm var. Biraz da halsizlik hissediyorum ama ateşim yok.
+
+---
+
+### Örnek 4: Pediatrik Vaka (Yüksek Ateş)
+Ad Soyad: Zeynep Çelik
+TC Kimlik No: 45678901234
+Yaşınız: 4
+Cinsiyet: Kadın
+Şikayet:
+Kızımın dünden beri ateşi var, 39 dereceye kadar çıktı. Ateş düşürücü verdim ama birkaç saat sonra tekrar yükseliyor. Hiçbir şey yemek istemiyor, sürekli uyumak istiyor. Biraz da öksürüğü başladı.
+
+---
+
+### Örnek 5: Nörolojik / Acil (İnme Şüphesi)
+Ad Soyad: Fatma Şahin
+TC Kimlik No: 56789012345
+Yaşınız: 72
+Cinsiyet: Kadın
+Şikayet:
+Annem yarım saat önce aniden konuşamamaya başladı. Kelimeleri peltek çıkıyor. Sağ kolunu ve sağ bacağını kaldıramıyor, sanki o tarafı tutmuyor. Yüzünün sağ tarafında da bir kayma var.
+
+---
+
+### Örnek 6: Ortopedik / Düşük Aciliyet (Bilek Burkulması)
+Ad Soyad: Burak Yıldız
+TC Kimlik No: 67890123456
+Yaşınız: 19
+Cinsiyet: Erkek
+Şikayet:
+Bugün basketbol oynarken ters bastım ve sağ ayak bileğimi burktum. Bileğim çok şişti ve üstüne basınca inanılmaz ağrıyor. Morarmaya da başladı. Hareket ettirmekte zorlanıyorum.

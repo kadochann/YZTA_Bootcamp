@@ -17,3 +17,8 @@ langchain
 langchain-community
 langchain-google-genai
 chromadb
+
+# DB dependencies
+sqlalchemy>=2.0.0
+psycopg2-binary
+alembic

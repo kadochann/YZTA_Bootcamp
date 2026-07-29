@@ -1,3 +1,18 @@
+# Installation
+Install Docker Desktop
+run python -m venv .venv
+
+# Windows
+.venv\Scripts\activate
+
+# Linux/macOS
+source .venv/bin/activate
+
+pip install -r requirements.txt
+
+run ./launcher.bat
+
+
 # 🩺 Akıllı Ön-Triyaj ve Doktor Karar Destek Paneli
 ### 🚀 YZTA Bootcamp 2026 - Grup 131 Proje Prototipi 
 

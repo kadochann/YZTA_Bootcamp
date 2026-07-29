@@ -200,30 +200,33 @@ div.st-key-navbar {
 
 /* ── Custom page links (Navbar & General site) ────────────── */
 div[data-testid="stPageLink"] {
-    background: #ffffff !important;
-    border: 1px solid #E2E8F0 !important;
-    border-radius: 12px !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+    background: rgba(255,255,255,0.12) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 div[data-testid="stPageLink"]:hover {
-    background: #F8FAFF !important;
-    border-color: #1A3A6B !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.12) !important;
+    background: rgba(255,255,255,0.22) !important;
+    border-color: rgba(255,255,255,0.4) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
 }
-div[data-testid="stPageLink"] a {
-    color: #0F2544 !important;
-    font-weight: 700 !important;
-    font-size: 0.95rem !important;
-    padding: 8px 16px !important;
+div[data-testid="stPageLink"] a, div[data-testid="stPageLink"] p, div[data-testid="stPageLink"] span {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.78rem !important;
+    padding: 4px 8px !important;
     text-decoration: none !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    white-space: nowrap !important;
 }
-div[data-testid="stPageLink"]:hover a {
-    color: #1A3A6B !important;
+div[data-testid="stPageLink"]:hover a,
+div[data-testid="stPageLink"]:hover p,
+div[data-testid="stPageLink"]:hover span {
+    color: #ffffff !important;
 }
 
 /* ── Multiselect selected tag chips ───────────────────────── */
