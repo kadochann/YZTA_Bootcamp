@@ -9,7 +9,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROMPTS_DIR = os.path.join(BASE_DIR, 'prompts')
 
 EXTRACTION_PROMPT_PATH = os.path.join(PROMPTS_DIR, 'information_extraction.txt')
-MAPPING_PROMPT_PATH = os.path.join(PROMPTS_DIR, 'evidence_mapping.txt')
+MAPPING_PROMPT_PATH = os.path.join(PROMPTS_DIR, 'evidence_mapping_v2.txt')
 
 def _get_gemini_client():
     """Initializes the Gemini client using the API key."""
@@ -96,7 +96,7 @@ def map_evidences_and_urgency(enriched_rag_results: list[dict]) -> dict:
     try:
         response = _generate_with_retry(
             client,
-            model='gemini-flash-latest',
+            model='gemini-3.5-flash',
             prompt=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",

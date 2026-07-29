@@ -9,6 +9,9 @@ API_UTIL_DIR = os.path.join(BASE_DIR, 'api', 'util')
 EMBEDDINGS_PATH = os.path.join(API_UTIL_DIR, 'embeddings_v3.json')
 VALUE_DICT_PATH = os.path.join(API_UTIL_DIR, 'value_dict.json')
 
+# Configurable RAG retrieval count — set RAG_K in .env to override (default: 4)
+RAG_K = int(os.environ.get("RAG_K", "4"))
+
 class RAGService:
     def __init__(self):
         self.vectorstore = None
@@ -36,22 +39,33 @@ class RAGService:
 
     def retrieve_and_enrich(self, clinical_statement: str) -> dict:
         """
-        Retrieves the top-1 document for a given clinical statement,
-        and enriches the possible_values with their meanings.
+        Retrieves the top-k documents for a given clinical statement,
+        merges and deduplicates their member evidences into a unified
+        candidate pool, tags each with retrieval_rank, and enriches
+        possible_values with their meanings.
         """
         if not self.vectorstore:
             raise RuntimeError("Vectorstore not initialized")
             
-        # Top-1 retrieval
-        results = self.vectorstore.similarity_search(clinical_statement, k=1)
+        # Top-k retrieval (k configured via RAG_K env var)
+        results = self.vectorstore.similarity_search(clinical_statement, k=RAG_K)
         if not results:
-            return {"clinical_statement": clinical_statement, "members": {}}
-            
-        best_doc = results[0]
-        members = json.loads(best_doc.metadata.get("members", "{}"))
+            return {"clinical_statement": clinical_statement, "candidates": {}}
+
+        # Merge candidates across all k retrieved documents.
+        # If the same evidence ID appears in multiple docs, keep the one
+        # from the highest-ranked (lowest rank number) retrieval.
+        candidates = {}
+        for rank, doc in enumerate(results, start=1):
+            members = json.loads(doc.metadata.get("members", "{}"))
+            for ev_id, ev_data in members.items():
+                if ev_id not in candidates:
+                    ev_data["retrieval_rank"] = rank
+                    candidates[ev_id] = ev_data
+                # else: already seen from a better-ranked doc, skip
         
-        # Enrich possible_values
-        for ev_id, ev_data in members.items():
+        # Enrich possible_values with human-readable meanings
+        for ev_id, ev_data in candidates.items():
             if "possible_values" in ev_data:
                 meanings = {}
                 for val in ev_data["possible_values"]:
@@ -63,7 +77,7 @@ class RAGService:
                 
         return {
             "clinical_statement": clinical_statement,
-            "members": members
+            "candidates": candidates
         }
 
 # Singleton instance for the service
