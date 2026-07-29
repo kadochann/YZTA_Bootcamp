@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from google import genai
 from google.genai import types
 
@@ -16,8 +17,34 @@ def _get_gemini_client():
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable is not set.")
     return genai.Client(api_key=api_key)
+
 import logging
 logger = logging.getLogger(__name__)
+
+def _generate_with_retry(client, model: str, prompt: str, config, max_retries: int = 3):
+    """Calls generate_content with automatic retry on 429 rate limit errors."""
+    for attempt in range(max_retries):
+        try:
+            return client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=config
+            )
+        except Exception as e:
+            err_str = str(e)
+            if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                # Parse retry delay from error if available, default to 15s
+                wait = 15
+                import re
+                match = re.search(r'retryDelay.*?(\d+)s', err_str)
+                if match:
+                    wait = int(match.group(1)) + 2  # add small buffer
+                if attempt < max_retries - 1:
+                    logger.warning(f"Rate limited (429). Waiting {wait}s before retry {attempt + 1}/{max_retries - 1}...")
+                    time.sleep(wait)
+                    continue
+            raise
+    raise RuntimeError("Max retries exceeded for Gemini API call.")
 
 def extract_symptoms(complaint: str) -> list[str]:
     """
@@ -31,14 +58,15 @@ def extract_symptoms(complaint: str) -> list[str]:
     
     client = _get_gemini_client()
     try:
-        response = client.models.generate_content(
+        response = _generate_with_retry(
+            client,
             model='gemini-flash-latest',
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            temperature=0.0 # Low temperature for more deterministic extraction
+            prompt=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.0
+            )
         )
-    )
     except Exception as e:
         logger.error(f"Error calling Gemini in extract_symptoms: {e}")
         raise RuntimeError(f"LLM extraction failed: {e}")
@@ -66,14 +94,15 @@ def map_evidences_and_urgency(enriched_rag_results: list[dict]) -> dict:
     
     client = _get_gemini_client()
     try:
-        response = client.models.generate_content(
+        response = _generate_with_retry(
+            client,
             model='gemini-flash-latest',
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            temperature=0.0
+            prompt=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.0
+            )
         )
-    )
     except Exception as e:
         logger.error(f"Error calling Gemini in map_evidences_and_urgency: {e}")
         raise RuntimeError(f"LLM mapping failed: {e}")
@@ -88,3 +117,4 @@ def map_evidences_and_urgency(enriched_rag_results: list[dict]) -> dict:
     except json.JSONDecodeError as e:
         logger.error(f"JSON parsing error in map_evidences_and_urgency: {e}")
         return {"evidences": [], "initial_evidence": "", "urgency": 5}
+

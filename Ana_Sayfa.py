@@ -1,6 +1,6 @@
 """
 app.py  ─  Ana giriş noktası & Anasayfa
-Çalıştırmak için:  streamlit run app.py
+Çalıştırmak için:  streamlit run Ana_Sayfa.py
 """
 
 import streamlit as st
@@ -18,7 +18,7 @@ st.set_page_config(
     page_title="MediTriaj | Akıllı Ön-Triyaj Sistemi",
     page_icon="🩺",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown(MAIN_CSS, unsafe_allow_html=True)
@@ -33,17 +33,29 @@ if "analiz_sonucu" not in st.session_state:
 
 # ── Top Navbar ──────────────────────────────────────────────────────────────
 with st.container(key="navbar"):
-    st.markdown(
-        """
-        <div style="display:flex; align-items:center; gap:12px; padding: 5px 0;">
-            <div>
-                <div style="font-size:2.7rem; font-weight:800; color:#ffffff; line-height:1.1; letter-spacing:-0.5px;">MediTriaj</div>
-                <div style="font-size:1.15rem; color:#B8C8E0; font-weight:600; margin-top:4px;">Akıllı Ön-Triyaj ve Doktor Karar Destek Paneli</div>
+    col_title, col_nav = st.columns([3, 4], vertical_alignment="center")
+
+    with col_title:
+        st.markdown(
+            """
+            <div style="display:flex; align-items:center; gap:12px; padding: 5px 0;">
+                <div>
+                    <div style="font-size:2.7rem; font-weight:800; color:#ffffff; line-height:1.1; letter-spacing:-0.5px;">MediTriaj</div>
+                    <div style="font-size:1.15rem; color:#B8C8E0; font-weight:600; margin-top:4px;">Akıllı Ön-Triyaj ve Doktor Karar Destek Paneli</div>
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_nav:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.page_link("Ana_Sayfa.py", label="🏠 Ana Sayfa", use_container_width=True)
+        with c2:
+            st.page_link("pages/3_Patients.py", label="👥 Hastalar", use_container_width=True)
+        with c3:
+            st.page_link("pages/4_Statistics.py", label="📊 İstatistikler", use_container_width=True)
 
 st.markdown("<hr style='margin-top: 5px; margin-bottom: 20px; border-color: #E2E8F0;'>", unsafe_allow_html=True)
 
@@ -110,7 +122,11 @@ with col_form:
         with c2:
             yas = st.number_input("Yaşınız", min_value=1, max_value=120, value=35, step=1)
 
-        cinsiyet = st.selectbox("Cinsiyet", ["Erkek", "Kadın"])
+        c3, c4 = st.columns(2)
+        with c3:
+            tc_kimlik = st.text_input("TC Kimlik No", placeholder="Örn: 12345678901")
+        with c4:
+            cinsiyet = st.selectbox("Cinsiyet", ["Erkek", "Kadın"])
 
         sikayet = st.text_area(
             "Şikayetinizi anlatın",
@@ -131,6 +147,7 @@ with col_form:
                 try:
                     payload = {
                         "full_name": ad_soyad or 'Hasta',
+                        "national_id": tc_kimlik,
                         "age": yas,
                         "sex": "M" if cinsiyet == "Erkek" else "E",
                         "complaint": sikayet
@@ -206,74 +223,73 @@ with col_sonuc:
 
         st.markdown('<div class="section-title">Analiz Sonucu</div>', unsafe_allow_html=True)
 
-        # Differential list HTML
-        diff_html = ""
-        for i, diff in enumerate(differentials[:3]):
-            pathology = diff.get("pathology", "")
-            prob = diff.get("probability", 0) * 100
-            diff_html += f'<li style="margin-bottom: 4px;"><b>{pathology}</b> (%{prob:.1f})</li>'
+        import html as _html
 
+        # ── Hasta başlık kartı ──────────────────────────────────────────────
         st.markdown(
             f"""
             <div class="{kart_class}">
                 <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 12px; margin-bottom: 16px;">
-                    <div style="font-size: 1.1rem; font-weight: 600; color: #1E293B;">{hasta_adi}</div>
-                    <div style="font-size: 0.9rem; color: #64748B;">Yaş: {yas} | Cinsiyet: {cins}</div>
+                    <div style="font-size: 1.1rem; font-weight: 600; color: #1E293B;">{_html.escape(hasta_adi)}</div>
+                    <div style="font-size: 0.9rem; color: #64748B;">Yaş: {yas} | Cinsiyet: {_html.escape(cins)}</div>
                 </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                     <div>
                         <div style="font-size:0.78rem; color:#64748B; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">En Olası Durum (Tahmin)</div>
                         <div style="font-size:1.6rem; font-weight:800; color:#1E293B;">
-                            {top_pred} <span style="font-size: 1rem; color: #64748B; font-weight: normal;">(%{top_prob:.1f})</span>
+                            {_html.escape(top_pred)}
+                            <span style="font-size: 1rem; color: #64748B; font-weight: normal;">(%{top_prob:.1f})</span>
                         </div>
                     </div>
                     <div style="text-align: right;">
                         <div style="font-size:0.78rem; color:#64748B; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Aciliyet Skoru</div>
-                        <div style="font-size: 1.6rem; font-weight: 800; color: {urgency_color};">
-                            {skor}/10
-                        </div>
+                        <div style="font-size: 1.6rem; font-weight: 800; color: {urgency_color};">{skor}/10</div>
                         <div style="font-size: 0.85rem; font-weight: 600; color: {urgency_color};">{urgency_label}</div>
                     </div>
-                </div>
-
-                <div style="font-size:0.9rem; color:#475569; margin-bottom: 16px;">
-                    <div style="font-weight: 600; margin-bottom: 4px;">Ayırıcı Tanılar (İlk 3):</div>
-                    <ul style="margin-top: 0; padding-left: 20px; color: #475569;">
-                        {diff_html}
-                    </ul>
-                </div>
-
-                <div style="font-size:0.82rem; color:#64748B; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-                    <b>Tespit edilen semptomlar:</b> {", ".join(semptomlar) if semptomlar else "—"}
                 </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        # Sohbet baloncukları
+        # ── Ayırıcı tanılar – bar gösterimi ────────────────────────────────
+        if differentials:
+            st.markdown(
+                '<div style="font-size:0.82rem; font-weight:600; color:#475569; margin: 12px 0 6px 0; text-transform:uppercase; letter-spacing:0.5px;">Ayırıcı Tanılar (En Olası 3)</div>',
+                unsafe_allow_html=True,
+            )
+            for diff in differentials[:3]:
+                pathology = diff.get("pathology", "")
+                prob = diff.get("probability", 0)
+                bar_pct = int(prob * 100)
+                st.markdown(
+                    f'<div style="font-size:0.85rem; color:#1E293B; margin-bottom:2px;">'
+                    f'<b>{_html.escape(pathology)}</b> <span style="color:#64748B;">(%{bar_pct:.1f})</span></div>',
+                    unsafe_allow_html=True,
+                )
+                st.progress(prob)
+
+        # ── Semptom vektörleri – madde işaretli liste ───────────────────────
+        st.markdown(
+            '<div style="font-size:0.82rem; font-weight:600; color:#475569; margin: 14px 0 6px 0; text-transform:uppercase; letter-spacing:0.5px;">Tespit Edilen Semptomlar</div>',
+            unsafe_allow_html=True,
+        )
+        if semptomlar:
+            symptom_md = "\n".join(f"- {s}" for s in semptomlar)
+            st.markdown(symptom_md)
+        else:
+            st.markdown("_Semptom tespit edilemedi._")
+
+        # ── Değerlendirme Mesajı – Markdown render ──────────────────────────
         st.markdown('<div class="section-title" style="margin-top:16px;">Değerlendirme Mesajı</div>', unsafe_allow_html=True)
 
         for mesaj in st.session_state.chat_gecmisi:
             if mesaj["tur"] == "kullanici":
-                st.markdown(
-                    f"""
-                    <div style="overflow:hidden; margin-bottom:8px;">
-                        <div class="chat-bubble-user" style="margin-left: 0px !important;">{mesaj["mesaj"]}</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                with st.chat_message("user"):
+                    st.markdown(mesaj["mesaj"])
             else:
-                st.markdown(
-                    f"""
-                    <div style="overflow:hidden; margin-bottom:8px;">
-                        <div class="chat-bubble-ai" style="margin-right: 0px !important;">{mesaj["mesaj"]}</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                with st.chat_message("assistant"):
+                    st.markdown(mesaj["mesaj"])
 
         # Sıfırla butonu
         if st.button("Yeni Analiz Başlat", use_container_width=True):

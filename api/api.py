@@ -30,6 +30,8 @@ load_dotenv()
 
 from src.llm_service import extract_symptoms, map_evidences_and_urgency
 from src.rag_service import get_rag_service
+from src.db.database import SessionLocal
+from src.db.models import Patient
 
 MODEL_PATH = os.environ.get('DDX_MODEL_PATH', '../model/ddx_lightgbm_model.txt')
 CLASSES_PATH = os.environ.get('DDX_CLASSES_PATH', './util/label_classes.json')
@@ -105,6 +107,7 @@ class PredictResponse(BaseModel):
 
 class TriageRequest(BaseModel):
     full_name: str
+    national_id: Optional[str] = None
     age: int
     sex: str
     complaint: str
@@ -165,6 +168,7 @@ def health():
 
 @app.post("/triage", response_model=TriageResponse)
 def triage(req: TriageRequest):
+    db = SessionLocal()
     try:
         # 1. Extraction: 1 LLM call
         symptoms = extract_symptoms(req.complaint)
@@ -189,7 +193,24 @@ def triage(req: TriageRequest):
         )
         prediction_response = predict(predict_req)
         
-        # 5. Build Response
+        # 5. Save to database
+        db_patient = Patient(
+            full_name=req.full_name,
+            national_id=req.national_id,
+            age=req.age,
+            sex=req.sex,
+            complaints=symptoms,
+            urgency_score=mapping["urgency"],
+            top_prediction={"pathology": prediction_response.top_prediction.pathology, "probability": prediction_response.top_prediction.probability},
+            differentials=[{"pathology": d.pathology, "probability": d.probability} for d in prediction_response.differential],
+            evidences=mapping.get("evidences", []),
+            initial_evidence=mapping.get("initial_evidence")
+        )
+        db.add(db_patient)
+        db.commit()
+        db.refresh(db_patient)
+        
+        # 6. Build Response
         return TriageResponse(
             patient_name=req.full_name,
             age=req.age,
@@ -199,8 +220,11 @@ def triage(req: TriageRequest):
             prediction=prediction_response
         )
     except Exception as e:
+        db.rollback()
         logger.exception("Error during triage workflow")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
 
 
 @app.post("/predict", response_model=PredictResponse)
