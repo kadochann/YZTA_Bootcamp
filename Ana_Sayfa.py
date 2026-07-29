@@ -10,6 +10,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from src.utils.styles import MAIN_CSS
+from src.utils.translations import translate_pathology
 import time
 import requests
 
@@ -162,6 +163,7 @@ with col_form:
                     })
                     
                     top_p = sonuc.get("prediction", {}).get("top_prediction", {}).get("pathology", "Bilinmiyor")
+                    top_p = translate_pathology(top_p)
                     st.session_state.chat_gecmisi.append({
                         "tur": "ai",
                         "mesaj": f"Şikayetleriniz alındı ve değerlendirildi. Yüksek olasılıklı durum: **{top_p}**. Bu bir tanı değildir, lütfen en kısa sürede doktorunuza başvurun."
@@ -203,6 +205,7 @@ with col_sonuc:
         
         prediction = sonuc.get("prediction", {})
         top_pred = prediction.get("top_prediction", {}).get("pathology", "Bilinmiyor")
+        top_pred = translate_pathology(top_pred)
         top_prob = prediction.get("top_prediction", {}).get("probability", 0) * 100
         
         differentials = prediction.get("differential", [])
@@ -260,6 +263,7 @@ with col_sonuc:
             )
             for diff in differentials[:3]:
                 pathology = diff.get("pathology", "")
+                pathology = translate_pathology(pathology)
                 prob = diff.get("probability", 0)
                 bar_pct = int(prob * 100)
                 st.markdown(

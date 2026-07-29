@@ -14,3 +14,6 @@ model/*.txt
 
 # Çevresel Değişkenler (API Key vb.)
 .env
+
+#docker
+.docker-compose.yml

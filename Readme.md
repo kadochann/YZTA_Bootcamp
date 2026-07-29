@@ -1,5 +1,6 @@
 # Installation
-python -m venv .venv
+Install Docker Desktop
+run python -m venv .venv
 
 # Windows
 .venv\Scripts\activate
@@ -8,6 +9,8 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -r requirements.txt
+
+run ./launcher.bat
 
 
 # 🩺 Akıllı Ön-Triyaj ve Doktor Karar Destek Paneli
