@@ -1,13 +1,19 @@
 # Installation
-Install Docker Desktop
-run python -m venv .venv
+* Install Docker Desktop
+* create .env from .env-example
+* create docker-compose.yml from docker-compose-example.yml
 
-# Windows
+* create virtual environment 
+    run python -m venv .venv
+
+# Activate venv
+## Windows
 .venv\Scripts\activate
 
-# Linux/macOS
+## Linux/macOS
 source .venv/bin/activate
 
+# Install requirements
 pip install -r requirements.txt
 
 run ./launcher.bat
