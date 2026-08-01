@@ -12,6 +12,43 @@ VALUE_DICT_PATH = os.path.join(API_UTIL_DIR, 'value_dict.json')
 # Configurable RAG retrieval count — set RAG_K in .env to override (default: 4)
 RAG_K = int(os.environ.get("RAG_K", "4"))
 
+# ---------------------------------------------------------------------------
+# LANDMINE FILTER
+# These evidence codes are so disease-specific that they are near-exclusive
+# indicators of a single pathology in the DDXPlus training set. Surfacing
+# them via RAG for an unrelated complaint hijacks the LightGBM model with
+# 95-100% single-code certainty, making all other evidence irrelevant.
+#
+# Only codes whose underlying question has NO plausible clinical meaning
+# outside its designated disease are included ("surgical" approach).
+# Medically overlapping codes (e.g. panic attack, anemia, PE) are intentionally
+# kept accessible so real cases of those diseases are not blinded.
+# ---------------------------------------------------------------------------
+LANDMINE_CODES: frozenset = frozenset({
+    # Myasthenia Gravis — jaw weakness, double vision, fatigability, dysphagia
+    "E_38", "E_63", "E_52", "E_90", "E_28", "E_65",
+    # Acute Dystonic Reactions — eye rolling, spasms, torticollis, grimacing
+    "E_205", "E_192", "E_193", "E_147", "E_15", "E_128", "E_168", "E_180", "E_62",
+    # Guillain-Barré Syndrome — bilateral ascending paralysis, absent reflexes
+    "E_156", "E_157", "E_83", "E_93", "E_177", "E_84", "E_0", "E_176",
+    # Whooping Cough — inspiratory whoop
+    "E_112", "E_166",
+    # Atrial Fibrillation — irregular/fluttering heartbeat
+    "E_164", "E_19", "E_139", "E_76", "E_22",
+    # PSVT — paroxysmal sudden-onset tachycardia
+    "E_60", "E_213", "E_35", "E_16",
+    # Scombroid Food Poisoning — fish-related flushing/rash
+    "E_187", "E_92",
+    # Boerhaave Syndrome — esophageal rupture
+    "E_211",
+    # GERD — heartburn / acid regurgitation
+    "E_215", "E_173", "E_98",
+    # Cluster Headache — unilateral eye tearing/redness
+    "E_184", "E_127", "E_25",
+    # Spontaneous Rib Fracture
+    "E_216", "E_37", "E_153",
+})
+
 class RAGService:
     def __init__(self):
         self.vectorstore = None
@@ -64,6 +101,11 @@ class RAGService:
                     candidates[ev_id] = ev_data
                 # else: already seen from a better-ranked doc, skip
         
+        # Remove landmine evidence codes — disease-specific codes that hijack
+        # the ML model if spuriously matched by the LLM.
+        candidates = {ev_id: ev_data for ev_id, ev_data in candidates.items()
+                      if ev_id not in LANDMINE_CODES}
+
         # Enrich possible_values with human-readable meanings
         for ev_id, ev_data in candidates.items():
             if "possible_values" in ev_data:
