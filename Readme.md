@@ -8,7 +8,7 @@ Projenin temel amacı; hastaların randevu öncesinde şikâyetlerini doğal dil
 
 ## 🎯 Temel Özellikler (MVP Kapsamı)
 * **Yapay Zeka Destekli Metin Analizi:** Google Gemini API kullanılarak hastanın doğal dildeki şikayetinden tıbbi semptomların sıfır hata ile JSON formatında ayıklanması.
-* **Akıllı Branş ve Aciliyet Tahmini:** `scikit-learn` (LightGBM) modeliyle semptomlar üzerinden poliklinik yönlendirmesi ve 1-10 arası aciliyet skoru üretimi.
+* **Akıllı Branş ve Aciliyet Tahmini:** `scikit-learn` (LightGBM) modeliyle semptomlar üzerinden poliklinik yönlendirmesi ve 1-10 arası aciliyet skoru üretimi. (Veri analitiği ve model eğitim süreçlerine [Kaggle Notebook](https://www.kaggle.com/code/yahyafuat/bootcamp-v2) adresi üzerinden erişilebilir.)
 * **Hafif ve Hızlı Arayüz (Streamlit):** Hem hasta bilgileriyle triyaj panelini hem de hasta özetlerinin yer aldığı rapor panelini tek bir Python ekosisteminde birleştiren kullanıcı dostu arayüz.
 * **Etik Yapay Zeka Yaklaşımı:** Kesinlikle tanı koymayan, "ön bilgilendirme amaçlı karar destek verisidir" uyarısı barındıran klinik sınır koruması.
 
@@ -214,7 +214,7 @@ Seçilen hastaya dair tüm verilerin (Hasta ID, randevu saati, risk faktörleri 
 ### 1. Backlog Düzeni ve Story Seçimleri (User Stories)
 Sprint 2 kapsamında hedeflerimize ulaşmak adına iş listemiz (Backlog) aşağıdaki Kullanıcı Hikayelerine (User Stories) bölünmüş ve ClickUp üzerinde önceliklendirilmiştir:
 
-*   **US-04 (Makine Öğrenmesi Modeli Eğitimi & Entegrasyonu):** Bir *Veri Bilimci* olarak, DDXPlus veri seti üzerinde yüksek doğruluklu bir LightGBM sınıflandırma modeli eğitmek ve bunu model dosyası olarak kaydetmek istiyorum, böylece semptomlardan branş ve aciliyet tahminlerini gerçekçi yapabilmeyi hedefliyorum. *(Durum: Tamamlandı)*
+*   **US-04 (Makine Öğrenmesi Modeli Eğitimi & Entegrasyonu):** Bir *Veri Bilimci* olarak, DDXPlus veri seti üzerinde yüksek doğruluklu bir LightGBM sınıflandırma modeli eğitmek ve bunu model dosyası olarak kaydetmek istiyorum, böylece semptomlardan branş ve aciliyet tahminlerini gerçekçi yapabilmeyi hedefliyorum. *(Durum: Tamamlandı | Model Eğitim Defteri: [Kaggle Notebook](https://www.kaggle.com/code/yahyafuat/bootcamp-v2))*
 *   **US-05 (FastAPI ile Model Servisi):** Bir *Yazılım Geliştirici* olarak, eğitilen LightGBM modelini sunan ve Streamlit ile haberleşen bir FastAPI REST API sunucusu ayağa kaldırmak istiyorum, böylece tahmin mekanizmasını modüler ve genişletilebilir hale getirmeyi amaçlıyorum. *(Durum: Tamamlandı)*
 *   **US-06 (Gemini API ile Semptom Çıkarımı):** Bir *Yapay Zeka Geliştiricisi* olarak, hastanın girdiği doğal dildeki şikayetten modelin anlayabileceği DDXPlus semptom kodlarını (E_...) sıfır hata ile JSON formatında çıkaran bir Gemini prompt ve API entegrasyonu yazmak istiyorum. *(Durum: Tamamlandı)*
 *   **US-07 (Çok Sayfalı Streamlit UI & Rol Revizyonu):** Bir *Triyaj Görevlisi* olarak, hastanın bilgilerini girdiğimde modelin aciliyet ve branş tahminlerini görebileceğim bir Ana Sayfa ile tüm hasta kayıtlarını inceleyip filtreleyebileceğim bir Hasta Özetleri paneli görmek istiyorum. *(Durum: Tamamlandı)*
