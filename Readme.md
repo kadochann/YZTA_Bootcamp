@@ -2,21 +2,19 @@
 * Install Docker Desktop
 * create .env from .env-example
 * create docker-compose.yml from docker-compose-example.yml
-
-* create virtual environment 
-    run python -m venv .venv
+* create virtual environment --> run python -m venv .venv
 
 # Activate venv
 ## Windows
-.venv\Scripts\activate
+* .venv\Scripts\activate
 
 ## Linux/macOS
-source .venv/bin/activate
+* source .venv/bin/activate
 
 # Install requirements
-pip install -r requirements.txt
+* pip install -r requirements.txt
 
-run ./launcher.bat
+run ./launcher.ps1
 
 
 # 🩺 Akıllı Ön-Triyaj ve Doktor Karar Destek Paneli

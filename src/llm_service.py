@@ -9,7 +9,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROMPTS_DIR = os.path.join(BASE_DIR, 'prompts')
 
 EXTRACTION_PROMPT_PATH = os.path.join(PROMPTS_DIR, 'information_extraction.txt')
-MAPPING_PROMPT_PATH = os.path.join(PROMPTS_DIR, 'evidence_mapping_v2.txt')
+MAPPING_PROMPT_PATH = os.path.join(PROMPTS_DIR, 'evidence_mapping.txt')
 
 def _get_gemini_client():
     """Initializes the Gemini client using the API key."""

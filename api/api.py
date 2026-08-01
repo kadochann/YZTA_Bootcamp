@@ -20,6 +20,14 @@ from pydantic import BaseModel, Field
 from typing import Optional
 import logging
 
+# Temperature scaling for probability calibration.
+# Higher values spread out the distribution (reduce over-confidence).
+# Set PREDICT_TEMPERATURE in .env to override.
+# NOTE: The primary misdiagnosis fix is the RAG landmine filter in rag_service.py.
+# Scaling above 1.0 flattens ALL predictions (not just wrong ones) so default is 1.0 (off).
+PREDICT_TEMPERATURE = float(os.environ.get("PREDICT_TEMPERATURE", "1.0"))
+
+
 logger = logging.getLogger(__name__)
 
 # Add root project dir to path so we can import src
@@ -121,6 +129,48 @@ class TriageResponse(BaseModel):
     prediction: PredictResponse
 
 
+# ---------- Debug request / response schemas ----------
+
+class DebugExtractRequest(BaseModel):
+    complaint: str = Field(..., description="Free-text patient complaint (any language).")
+
+class DebugExtractResponse(BaseModel):
+    symptoms: list[str] = Field(description="Extracted atomic clinical statements.")
+    prompt_path: str = Field(description="Prompt file used for this call.")
+
+class DebugRagRequest(BaseModel):
+    clinical_statement: str = Field(
+        ..., description="A single clinical statement to retrieve RAG candidates for."
+    )
+
+class DebugRagResponse(BaseModel):
+    clinical_statement: str
+    candidates: dict = Field(description="Enriched RAG candidate pool for this statement.")
+
+class DebugMapRequest(BaseModel):
+    enriched_rag_results: list[dict] = Field(
+        ...,
+        description=(
+            "Pre-built RAG output list — the same structure returned by /debug/rag. "
+            "Each element must have 'clinical_statement' and 'candidates' keys."
+        ),
+        examples=[[
+            {
+                "clinical_statement": "Fever is present.",
+                "candidates": {
+                    "E_91": {"question": "Do you have a fever?", "retrieval_rank": 1}
+                }
+            }
+        ]]
+    )
+
+class DebugMapResponse(BaseModel):
+    evidences: list[str]
+    initial_evidence: str
+    urgency: int
+    reasoning: Optional[str] = Field(None, description="LLM reasoning field if returned.")
+    prompt_path: str
+
 # ---------- Feature building for a single request ----------
 def build_single_feature_vector(req: PredictRequest, sex_override: Optional[str] = None):
     col_index = _state['col_index']
@@ -184,9 +234,15 @@ def triage(req: TriageRequest):
         mapping = map_evidences_and_urgency(enriched_results)
         
         # 4. Local ML Prediction
+        # Normalize sex: UI may send Turkish strings ("Erkek"/"Kadın") or single chars.
+        _SEX_MAP = {
+            "erkek": "M", "e": "M", "m": "M",
+            "kadın": "F", "kadin": "F", "k": "F", "f": "F",
+        }
+        sex_code = _SEX_MAP.get((req.sex or "").lower().strip()) if req.sex else None
         predict_req = PredictRequest(
             age=req.age,
-            sex=req.sex[0].upper() if req.sex else None, # M or F or E
+            sex=sex_code,
             evidences=mapping["evidences"],
             initial_evidence=mapping["initial_evidence"],
             top_k=3
@@ -236,14 +292,22 @@ def predict(req: PredictRequest):
     classes = _state['classes']
 
     if req.sex is None:
-        # Sex unknown/undisclosed: marginalize by averaging predictions for M and F
-        # rather than injecting an undefined "0.5" value into a tree-based model.
         X_m, unrecognized = build_single_feature_vector(req, sex_override='M')
         X_f, _ = build_single_feature_vector(req, sex_override='F')
-        proba = (model.predict(X_m)[0] + model.predict(X_f)[0]) / 2.0
+        raw_proba = (model.predict(X_m)[0] + model.predict(X_f)[0]) / 2.0
     else:
         X, unrecognized = build_single_feature_vector(req)
-        proba = model.predict(X)[0]
+        raw_proba = model.predict(X)[0]
+
+    # Temperature scaling: softmax over log-probabilities scaled by 1/T.
+    # Prevents a single landmine feature from yielding 99.9% certainty.
+    if PREDICT_TEMPERATURE != 1.0:
+        log_p = np.log(np.clip(raw_proba, 1e-12, None))
+        scaled = log_p / PREDICT_TEMPERATURE
+        scaled -= scaled.max()  # numerical stability
+        proba = np.exp(scaled) / np.exp(scaled).sum()
+    else:
+        proba = raw_proba
 
     order = np.argsort(proba)[::-1][:req.top_k]
     differential = [Diagnosis(pathology=classes[i], probability=float(proba[i])) for i in order]
@@ -253,3 +317,111 @@ def predict(req: PredictRequest):
         differential=differential,
         unrecognized_evidences=unrecognized,
     )
+
+
+# ==========================================================
+# DEBUG / TESTING ENDPOINTS
+# These endpoints isolate each pipeline step so individual
+# LLM calls and the RAG layer can be tested independently.
+# ==========================================================
+
+@app.post(
+    "/debug/extract",
+    response_model=DebugExtractResponse,
+    summary="[Debug] LLM-1: Extract clinical statements from free text",
+    tags=["Debug"],
+)
+def debug_extract(req: DebugExtractRequest):
+    """
+    Runs ONLY the first LLM call (information extraction).
+    Accepts any free-text complaint (including non-English) and returns
+    the list of atomic clinical statements produced by the extraction prompt.
+    """
+    import src.llm_service as svc
+    try:
+        symptoms = svc.extract_symptoms(req.complaint)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return DebugExtractResponse(
+        symptoms=symptoms,
+        prompt_path=svc.EXTRACTION_PROMPT_PATH,
+    )
+
+
+@app.post(
+    "/debug/rag",
+    response_model=DebugRagResponse,
+    summary="[Debug] RAG: Retrieve & enrich candidates for one clinical statement",
+    tags=["Debug"],
+)
+def debug_rag(req: DebugRagRequest):
+    """
+    Runs ONLY the RAG retrieval step for a single clinical statement.
+    Returns the enriched candidate pool exactly as it would be fed to LLM-2.
+    No LLM call is made.
+    """
+    try:
+        rag_service = get_rag_service()
+        result = rag_service.retrieve_and_enrich(req.clinical_statement)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return DebugRagResponse(
+        clinical_statement=result["clinical_statement"],
+        candidates=result["candidates"],
+    )
+
+
+@app.post(
+    "/debug/map",
+    response_model=DebugMapResponse,
+    summary="[Debug] LLM-2: Map pre-built RAG results to evidence expressions",
+    tags=["Debug"],
+)
+def debug_map(req: DebugMapRequest):
+    """
+    Runs ONLY the second LLM call (evidence mapping).
+    Accepts a pre-built enriched RAG results list (e.g. from /debug/rag or
+    crafted manually) and returns evidence codes, initial evidence,
+    urgency score, and the LLM's step-by-step reasoning.
+
+    Tip: Chain /debug/extract → /debug/rag (per statement) → /debug/map
+    to replay the full pipeline with full visibility at each step.
+    """
+    import src.llm_service as svc
+    from google import genai
+    from google.genai import types
+    import json as _json
+
+    # Re-use the internal helper but also capture the raw `reasoning` field
+    with open(svc.MAPPING_PROMPT_PATH, 'r', encoding='utf-8') as f:
+        prompt_template = f.read()
+
+    input_data = _json.dumps(req.enriched_rag_results, indent=2)
+    prompt = f"{prompt_template}\n\n--------------------------------------------------\nINPUT:\n{input_data}"
+
+    client = svc._get_gemini_client()
+    try:
+        response = svc._generate_with_retry(
+            client,
+            model='gemini-3.5-flash',
+            prompt=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.0,
+            )
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    try:
+        result = _json.loads(response.text)
+    except _json.JSONDecodeError as e:
+        raise HTTPException(status_code=502, detail=f"LLM returned invalid JSON: {e}\nRaw: {response.text}")
+
+    return DebugMapResponse(
+        evidences=result.get("evidences", []),
+        initial_evidence=result.get("initial_evidence", ""),
+        urgency=result.get("urgency", 5),
+        reasoning=result.get("reasoning"),
+        prompt_path=svc.MAPPING_PROMPT_PATH,
+    )
